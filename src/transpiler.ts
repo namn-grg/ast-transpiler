@@ -7,6 +7,7 @@ import * as path from "path";
 import { Logger } from './logger.js';
 import { Languages, TranspilationMode, IFileExport, IFileImport, ITranspiledFile, IInput } from './types.js';
 import { GoTranspiler } from './goTranspiler.js';
+import { RustTranspiler } from './rustTranspiler.js';
 
 const __dirname_mock = currentPath;
 
@@ -49,21 +50,24 @@ export default class Transpiler {
     phpTranspiler: PhpTranspiler;
     csharpTranspiler: CSharpTranspiler;
     goTranspiler: GoTranspiler;
+    rustTranspiler: RustTranspiler;
     constructor(config = {}) {
         this.config = config;
         const phpConfig = config["php"] || {};
         const pythonConfig = config["python"] || {};
         const csharpConfig = config["csharp"] || {};
         const goConfig = config["go"] || {};
+        const rustConfig = config["rust"] || {};
 
         if ("verbose" in config) {
-            Logger.setVerboseMode(config['verbose']);
+            Logger.setVerboseMode(!!config['verbose']);
         }
 
         this.pythonTranspiler = new PythonTranspiler(pythonConfig);
         this.phpTranspiler = new PhpTranspiler(phpConfig);
         this.csharpTranspiler = new CSharpTranspiler(csharpConfig);
         this.goTranspiler = new GoTranspiler(goConfig);
+        this.rustTranspiler = new RustTranspiler(rustConfig);
     }
 
     setVerboseMode(verbose: boolean) {
@@ -129,7 +133,11 @@ export default class Transpiler {
         case Languages.Go:
             transpiledContent = this.goTranspiler.printNode(global.src, -1);
             break;
+        case Languages.Rust:
+            transpiledContent = this.rustTranspiler.printNode(global.src, -1);
+            break;
         }
+
         let imports = [];
         let exports = [];
 
@@ -237,6 +245,13 @@ export default class Transpiler {
         return this.transpile(Languages.Go, TranspilationMode.ByContent, content);
     }
 
+    transpileRust(content): ITranspiledFile {
+        return this.transpile(Languages.Rust, TranspilationMode.ByContent, content);
+    }
+
+    transpileRustByPath(path): ITranspiledFile {
+        return this.transpile(Languages.Rust, TranspilationMode.ByPath, path);
+    }
 
     getFileImports(content: string): IFileImport[] {
         this.createProgramInMemoryAndSetGlobals(content);
@@ -273,7 +288,7 @@ export default class Transpiler {
     }
 
     convertStringToLanguageEnum(lang: string): Languages {
-        switch(lang) {
+        switch(lang.toLowerCase()) {
         case "python":
             return Languages.Python;
         case "php":
@@ -282,6 +297,10 @@ export default class Transpiler {
             return Languages.CSharp;
         case "go":
             return Languages.Go;
+        case "rust":
+            return Languages.Rust;
+        default:
+            throw new Error("Language not supported");
         }
     }
 }
