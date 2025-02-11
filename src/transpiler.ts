@@ -245,12 +245,12 @@ export default class Transpiler {
         return this.transpile(Languages.Go, TranspilationMode.ByContent, content);
     }
 
-    transpileRust(content): ITranspiledFile {
-        return this.transpile(Languages.Rust, TranspilationMode.ByContent, content);
-    }
-
     transpileRustByPath(path): ITranspiledFile {
         return this.transpile(Languages.Rust, TranspilationMode.ByPath, path);
+    }
+
+    transpileRust(content): ITranspiledFile {
+        return this.transpile(Languages.Rust, TranspilationMode.ByContent, content);
     }
 
     getFileImports(content: string): IFileImport[] {
